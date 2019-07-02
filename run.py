@@ -16,7 +16,7 @@ unk_tok = '<unk>'
 
 # learning params
 init_range = 0.08
-epochs = 10
+epochs = 100
 eval_step = 1000
 lr = 0.1
 momentum = 0.9
@@ -35,7 +35,7 @@ dec_layers = 1
 def evaluate(model, set):
 	random.shuffle(set)
 	preds = []
-	for i in range(len(set[:100])):
+	for i in range(len(set)):
 		#i=0
 		lemma = set[i][0].tolist()
 		word = set[i][1].tolist()
@@ -80,11 +80,17 @@ if __name__ == '__main__':
 		model.load_state_dict(saved_state)
 	else:
 		model.init_weights(init_range)
-		optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
+		optimizer = optim.Adam(model.parameters())
 		train_loss = 0
 		step = 0
+
+		avg_loss_list = []
+		train_acc_list = []
+		dev_acc_list = []
+
+		train_holdout = train[:1000]
+
 		for epoch in range(epochs):
-			start = time.time()
 			random.shuffle(train)
 			for i in range(len(train)):
 				lemma = train[i][0]
@@ -103,16 +109,18 @@ if __name__ == '__main__':
 					total_loss += loss
 
 				optimizer.zero_grad()
-				total_loss.backward()
+				total_loss.backward()# print('w_embeds_i =', w_embeds_i.size())
+				# print('h0 =', h0.size())
+				# print('self.c0 =', self.c0.size())
 				optimizer.step()
 				train_loss += total_loss
 
 				step += 1
-				if step % (eval_step/100) == 0:
-				  	print('{:d} word: {:30}   pred: {:30}'.format(
-						step, data.vec2word(word), data.vec2word([x.max(0)[1].item() for x in pred])))
+				# if step % (eval_step/100) == 0:
+				#   	print('{:d} word: {:30}   pred: {:30}'.format(
+				# 		step, data.vec2word(word), data.vec2word([x.max(0)[1].item() for x in pred])))
 				if step % eval_step == 0:
-					train_preds = evaluate(model, train[:1000])
+					train_preds = evaluate(model, train_holdout)
 					train_acc = score(train_preds)
 					dev_preds = evaluate(model, dev)
 					dev_acc = score(dev_preds)
@@ -122,6 +130,13 @@ if __name__ == '__main__':
 					print('dev examples')
 					for j in range(5):
 						print('word: {:30}   pred: {:30}'.format(data.vec2word(dev_preds[j][0]), data.vec2word(dev_preds[j][1])))
-					print('epoch: {:.4f}/{:d}  completion: {:.2f}%  train loss: {:.4f}  train acc: {:f}  dev acc: {:f}'.format(
+					print('epoch: {:.2f}/{:d}  completion: {:.2f}%  train loss: {:.4f}  train acc: {:f}  dev acc: {:f}'.format(
 						float(epoch) + ((i+1)/len(train)), epochs, (step/(epochs*len(train)))*100, train_loss / eval_step, train_acc*100, dev_acc*100))
+					avg_loss_list.append(round((train_loss / eval_step).item(), 3))
+					train_acc_list.append(round(train_acc*100, 2))
+					dev_acc_list.append(round(dev_acc*100, 2))
+					print('average loss list:   ', avg_loss_list)
+					print('train acc list:      ', train_acc_list)
+					print('dev acc list:        ', dev_acc_list)
+					print()
 					train_loss = 0
