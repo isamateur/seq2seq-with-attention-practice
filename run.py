@@ -16,10 +16,8 @@ unk_tok = '<unk>'
 
 # learning params
 init_range = 0.08
-epochs = 100
+epochs = 20
 eval_step = 1000
-lr = 0.1
-momentum = 0.9
 batch_size = 64
 criterion = nn.NLLLoss()
 
@@ -31,6 +29,9 @@ dec_hidden_dim = 128
 enc_layers = 1
 dec_layers = 1
 
+# output
+model_path = "model.dat"
+out_stats_path = "RESULTS.tsv"
 
 def evaluate(model, set):
 	random.shuffle(set)
@@ -74,7 +75,6 @@ if __name__ == '__main__':
 	special_toks = {'sos': data.get_char_id(start_tok), 'eos': data.get_char_id(end_tok)}
 	model = Seq2Seq(char_vocab_len, feat_vocab_len, embedding_dim, enc_hidden_dim, dec_hidden_dim, special_toks)
 
-	model_path = "model.dat"
 	if os.path.exists(model_path):
 		saved_state = torch.load(model_path)
 		model.load_state_dict(saved_state)
@@ -84,11 +84,10 @@ if __name__ == '__main__':
 		train_loss = 0
 		step = 0
 
-		avg_loss_list = []
-		train_acc_list = []
-		dev_acc_list = []
-
 		train_holdout = train[:1000]
+
+		with open(out_stats_path, 'w+') as f:
+			f.write('epoch\ttrain_loss\ttrain_acc\tdev_acc\n')
 
 		for epoch in range(epochs):
 			random.shuffle(train)
@@ -116,9 +115,6 @@ if __name__ == '__main__':
 				train_loss += total_loss
 
 				step += 1
-				# if step % (eval_step/100) == 0:
-				#   	print('{:d} word: {:30}   pred: {:30}'.format(
-				# 		step, data.vec2word(word), data.vec2word([x.max(0)[1].item() for x in pred])))
 				if step % eval_step == 0:
 					train_preds = evaluate(model, train_holdout)
 					train_acc = score(train_preds)
@@ -132,11 +128,13 @@ if __name__ == '__main__':
 						print('word: {:30}   pred: {:30}'.format(data.vec2word(dev_preds[j][0]), data.vec2word(dev_preds[j][1])))
 					print('epoch: {:.2f}/{:d}  completion: {:.2f}%  train loss: {:.4f}  train acc: {:f}  dev acc: {:f}'.format(
 						float(epoch) + ((i+1)/len(train)), epochs, (step/(epochs*len(train)))*100, train_loss / eval_step, train_acc*100, dev_acc*100))
-					avg_loss_list.append(round((train_loss / eval_step).item(), 3))
-					train_acc_list.append(round(train_acc*100, 2))
-					dev_acc_list.append(round(dev_acc*100, 2))
-					print('average loss list:   ', avg_loss_list)
-					print('train acc list:      ', train_acc_list)
-					print('dev acc list:        ', dev_acc_list)
+
+					train_loss_str = str(round((train_loss / eval_step).item(), 3))
+					train_acc_str = str(round(train_acc*100, 2))
+					dev_acc_str = str(round(dev_acc*100, 2))
+					epoch_str = str(float(epoch) + ((i+1)/len(train)))
+					with open(out_stats_path, 'a') as f:
+						f.write(epoch_str + '\t' + train_loss_str + '\t' + train_acc_str + '\t' + dev_acc_str + '\n')
+
 					print()
 					train_loss = 0
