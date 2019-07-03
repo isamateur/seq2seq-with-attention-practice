@@ -1,4 +1,4 @@
-# morphological-inflection-practice
+# seq2seq-with-attention-practice
 This repository is for me to practice implementing seq2seq models with attention in PyTorch while solving the CoNLL-SIGMORPHON 2017 morphological inflection shared task
 
 ## Seq2Seq Model
