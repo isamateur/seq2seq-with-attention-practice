@@ -31,7 +31,6 @@ dec_layers = 1
 
 # output
 model_path = "model.dat"
-out_stats_path = "RESULTS.tsv"
 
 def evaluate(model, set):
 	random.shuffle(set)
@@ -59,6 +58,8 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	language = args.lang
+
+	out_stats_path = 'results/' + language + '_seq2seq.tsv'
 
 	# data paths
 	train_path = 'data/conll2017/all/task1/' + language + '-train-high'
