@@ -62,9 +62,9 @@ if __name__ == '__main__':
 	out_stats_path = 'results/' + language + '_seq2seq.tsv'
 
 	# data paths
-	train_path = 'data/conll2017/all/task1/' + language + '-train-high'
-	dev_path = 'data/conll2017/all/task1/' + language + '-dev'
-	test_path = 'data/conll2017/answers/task1/' + language + '-uncovered-test'
+	train_path = 'data/task1/' + language + '-train-high'
+	dev_path = 'data/task1/' + language + '-dev'
+	test_path = 'data/task1_test/' + language + '-uncovered-test'
 
 	data = Data(train_path, dev_path, test_path)
 	char_vocab_len = data.create_char_vocab()
