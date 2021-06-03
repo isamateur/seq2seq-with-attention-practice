@@ -54,7 +54,7 @@ def score(preds):
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-lang', dest='lang', help='choose the language to run the task on', default='german', type=str)
+	parser.add_argument('-lang', dest='lang', help='choose the language to run the task on', default='turkish', type=str)
 	args = parser.parse_args()
 
 	language = args.lang
